@@ -1,0 +1,1368 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Pengurusan Stok Buku</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- QR Code Scanner -->
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --success-color: #27ae60;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --info-color: #17a2b8;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --purple-color: #8e44ad;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .main-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            overflow: hidden;
+            margin: 20px auto;
+            max-width: 900px;
+        }
+
+        .app-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .app-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(180deg); }
+        }
+
+        .app-header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .app-header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 2;
+        }
+
+        .search-section {
+            background: var(--light-color);
+            padding: 30px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .search-input-group {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .search-input-group .form-control {
+            padding: 15px 20px 15px 50px;
+            border-radius: 15px;
+            border: 2px solid #e9ecef;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .search-input-group .form-control:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        }
+
+        .search-input-group .input-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+            z-index: 3;
+        }
+
+        .suggestions-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 2px solid #e9ecef;
+            border-top: none;
+            border-radius: 0 0 15px 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            z-index: 1000;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .suggestion-item {
+            padding: 12px 20px;
+            border-bottom: 1px solid #f8f9fa;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .suggestion-item:hover {
+            background: var(--light-color);
+            color: var(--primary-color);
+        }
+
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .suggestion-title {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .suggestion-details {
+            font-size: 0.85em;
+            color: #6c757d;
+        }
+
+        .quick-add-suggestion {
+            background: linear-gradient(135deg, #e8f5e8, #f0f8f0);
+            border-left: 4px solid var(--success-color);
+            font-weight: 600;
+            color: var(--success-color);
+        }
+
+        .quick-add-suggestion:hover {
+            background: linear-gradient(135deg, #d4edda, #e8f5e8);
+        }
+
+        .btn-custom {
+            padding: 12px 25px;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .btn-custom::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn-custom:hover::before {
+            left: 100%;
+        }
+
+        .scanner-section {
+            background: white;
+            padding: 30px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .scanner-container {
+            text-align: center;
+            padding: 20px;
+            background: var(--light-color);
+            border-radius: 15px;
+            border: 2px dashed var(--secondary-color);
+        }
+
+        #qr-reader {
+            max-width: 400px;
+            margin: 20px auto;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .book-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .book-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--secondary-color), var(--success-color));
+        }
+
+        .book-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        .book-card.highlight {
+            border-color: var(--warning-color);
+            box-shadow: 0 0 30px rgba(243, 156, 18, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+
+        .book-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .book-barcode {
+            background: var(--light-color);
+            padding: 8px 15px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            color: var(--dark-color);
+            margin-bottom: 15px;
+            display: inline-block;
+        }
+
+        .book-shelf {
+            background: linear-gradient(135deg, #f8f4ff, #e8e4ff);
+            color: var(--purple-color);
+            padding: 10px 15px;
+            border-radius: 15px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: inline-block;
+            border: 1px solid rgba(142, 68, 173, 0.2);
+        }
+
+        .book-stock {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--success-color);
+            background: rgba(39, 174, 96, 0.1);
+            padding: 10px 15px;
+            border-radius: 10px;
+            display: inline-block;
+        }
+
+        .stock-controls {
+            background: var(--light-color);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        .quantity-input {
+            width: 80px;
+            text-align: center;
+            font-weight: 600;
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+        }
+
+        .quantity-input:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        }
+
+        .new-book-form {
+            background: linear-gradient(135deg, #e8f5e8, #f0f8f0);
+            border: 2px dashed var(--success-color);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 25px;
+            position: relative;
+        }
+
+        .new-book-form::before {
+            content: '\f067';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            top: -15px;
+            left: 30px;
+            background: var(--success-color);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .form-floating > label {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .form-floating > .form-control:focus ~ label {
+            color: var(--success-color);
+        }
+
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1050;
+        }
+
+        .toast-custom {
+            border-radius: 15px;
+            border: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+
+        .toast-custom .toast-header {
+            border-radius: 15px 15px 0 0;
+            font-weight: 600;
+        }
+
+        .loading-state {
+            text-align: center;
+            padding: 60px 30px;
+            color: var(--dark-color);
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--light-color);
+            border-top: 4px solid var(--secondary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 30px;
+            color: var(--dark-color);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            color: var(--secondary-color);
+            margin-bottom: 20px;
+        }
+
+        .stats-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+        }
+
+        .stats-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+        .stats-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+            
+            .app-header {
+                padding: 30px 20px;
+            }
+            
+            .app-header h1 {
+                font-size: 2rem;
+            }
+            
+            .book-card, .new-book-form {
+                margin: 15px;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="main-container">
+            <!-- Header -->
+            <div class="app-header">
+                <h1><i class="fas fa-book-open me-3"></i>Sistem Pengurusan Stok Buku</h1>
+                <p><i class="fas fa-store me-2"></i>Kedai Buku Digital - Pengurusan Mudah & Cekap</p>
+            </div>
+
+            <!-- Search Section -->
+            <div class="search-section">
+                <div class="search-input-group">
+                    <i class="fas fa-search input-icon"></i>
+                    <input type="text" id="searchInput" class="form-control" placeholder="Cari tajuk buku atau barcode..." autocomplete="off">
+                    <div id="suggestions" class="suggestions-dropdown d-none"></div>
+                </div>
+                
+                <div class="d-flex gap-3 flex-wrap justify-content-center">
+                    <button onclick="searchBook()" class="btn btn-primary btn-custom">
+                        <i class="fas fa-search me-2"></i>Cari Buku
+                    </button>
+                    <button onclick="toggleScanner()" class="btn btn-secondary btn-custom" id="scannerBtn">
+                        <i class="fas fa-camera me-2"></i>Imbas Barcode
+                    </button>
+                    <button onclick="showAllBooks()" class="btn btn-info btn-custom">
+                        <i class="fas fa-list me-2"></i>Senarai Semua
+                    </button>
+                </div>
+            </div>
+
+            <!-- Scanner Section -->
+            <div class="scanner-section d-none" id="scannerSection">
+                <div class="scanner-container">
+                    <h4 class="mb-3"><i class="fas fa-camera me-2"></i>Imbas Barcode Buku</h4>
+                    <p class="text-muted mb-3">Arahkan kamera ke barcode buku untuk imbasan automatik</p>
+                    <div id="qr-reader"></div>
+                    <button onclick="stopScanner()" class="btn btn-danger btn-custom mt-3">
+                        <i class="fas fa-stop me-2"></i>Tutup Scanner
+                    </button>
+                </div>
+            </div>
+
+            <!-- Book Display Area -->
+            <div id="bookDisplay">
+                <div class="empty-state">
+                    <i class="fas fa-book-reader"></i>
+                    <h3 class="mb-3">Cari Buku Anda</h3>
+                    <p class="text-muted">Gunakan kotak carian di atas atau imbas barcode untuk mula menguruskan stok buku</p>
+                </div>
+            </div>
+
+            <!-- New Book Form -->
+            <div id="newBookForm" class="new-book-form d-none">
+                <h4 class="text-success mb-4">
+                    <i class="fas fa-plus-circle me-2"></i>Tambah Buku Baru
+                </h4>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="form-floating">
+                            <input type="text" id="newBarcode" class="form-control" readonly>
+                            <label><i class="fas fa-barcode me-2"></i>Barcode</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="form-floating">
+                            <input type="number" id="newStock" class="form-control" value="0" min="0">
+                            <label><i class="fas fa-boxes me-2"></i>Stok Awal</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="form-floating">
+                        <input type="text" id="newTitle" class="form-control" placeholder="Masukkan tajuk buku">
+                        <label><i class="fas fa-book me-2"></i>Tajuk Buku</label>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <div class="form-floating">
+                        <input type="text" id="newShelf" class="form-control" placeholder="Contoh: A1-Sejarah, B2-Matematik">
+                        <label><i class="fas fa-map-marker-alt me-2"></i>Nama Rak</label>
+                    </div>
+                </div>
+                
+                <div class="d-flex gap-3 justify-content-center">
+                    <button onclick="saveNewBook()" class="btn btn-success btn-custom">
+                        <i class="fas fa-save me-2"></i>Simpan Buku
+                    </button>
+                    <button onclick="cancelNewBook()" class="btn btn-secondary btn-custom">
+                        <i class="fas fa-times me-2"></i>Batal
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Global variables
+        let html5QrcodeScanner = null;
+        let allBooks = [];
+        let currentBook = null;
+
+        // Mock data with realistic book information
+        const mockBooks = [
+            { 
+                barcode: '9789674123456', 
+                title: 'Sejarah Malaysia Tingkatan 4', 
+                stock: 15, 
+                shelf: 'A1-Sejarah',
+                category: 'Sejarah'
+            },
+            { 
+                barcode: '9789674789012', 
+                title: 'Matematik Tambahan Tingkatan 4', 
+                stock: 8, 
+                shelf: 'B2-Matematik',
+                category: 'Matematik'
+            },
+            { 
+                barcode: '9789674345678', 
+                title: 'Bahasa Melayu Komunikatif', 
+                stock: 22, 
+                shelf: 'C1-Bahasa',
+                category: 'Bahasa'
+            },
+            { 
+                barcode: '9789674901234', 
+                title: 'Sains Komputer Tingkatan 5', 
+                stock: 5, 
+                shelf: 'D3-Komputer',
+                category: 'Komputer'
+            },
+            { 
+                barcode: '9789674567890', 
+                title: 'Fizik Tingkatan 4', 
+                stock: 12, 
+                shelf: 'E1-Sains',
+                category: 'Sains'
+            }
+        ];
+
+        // Mock Google Apps Script functions
+        function getAllBooks() {
+            return new Promise((resolve) => {
+                setTimeout(() => resolve(mockBooks), 500);
+            });
+        }
+
+        function getBookByBarcode(barcode) {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    const book = mockBooks.find(b => b.barcode === barcode);
+                    resolve(book || null);
+                }, 300);
+            });
+        }
+
+        function getBookByTitle(title) {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    const book = mockBooks.find(b => 
+                        b.title.toLowerCase().includes(title.toLowerCase())
+                    );
+                    resolve(book || null);
+                }, 300);
+            });
+        }
+
+        function updateStock(barcode, newStock) {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    const bookIndex = mockBooks.findIndex(b => b.barcode === barcode);
+                    if (bookIndex !== -1) {
+                        mockBooks[bookIndex].stock = newStock;
+                        resolve(true);
+                    } else {
+                        resolve(false);
+                    }
+                }, 300);
+            });
+        }
+
+        function addNewBook(barcode, title, shelf, stock) {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    mockBooks.push({ 
+                        barcode, 
+                        title, 
+                        shelf, 
+                        stock: parseInt(stock),
+                        category: 'Umum'
+                    });
+                    resolve(true);
+                }, 300);
+            });
+        }
+
+        // Toast notification system
+        function showToast(message, type = 'info', icon = 'info-circle') {
+            const toastContainer = document.getElementById('toastContainer');
+            const toastId = 'toast-' + Date.now();
+            
+            const bgClass = {
+                'success': 'bg-success',
+                'error': 'bg-danger',
+                'warning': 'bg-warning',
+                'info': 'bg-info'
+            }[type] || 'bg-info';
+
+            const toastHTML = `
+                <div id="${toastId}" class="toast toast-custom" role="alert">
+                    <div class="toast-header ${bgClass} text-white">
+                        <i class="fas fa-${icon} me-2"></i>
+                        <strong class="me-auto">Sistem Buku</strong>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+                    </div>
+                    <div class="toast-body">
+                        ${message}
+                    </div>
+                </div>
+            `;
+            
+            toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+            const toastElement = new bootstrap.Toast(document.getElementById(toastId));
+            toastElement.show();
+            
+            // Remove toast element after it's hidden
+            document.getElementById(toastId).addEventListener('hidden.bs.toast', function() {
+                this.remove();
+            });
+        }
+
+        // Smart search functionality with auto-suggestions
+        let searchTimeout;
+        let isSearching = false;
+
+        async function searchBook() {
+            const searchTerm = document.getElementById('searchInput').value.trim();
+            if (!searchTerm) {
+                showToast('Sila masukkan tajuk buku atau barcode', 'warning', 'exclamation-triangle');
+                return;
+            }
+
+            showLoading();
+
+            try {
+                let book = await getBookByBarcode(searchTerm);
+                
+                if (!book) {
+                    book = await getBookByTitle(searchTerm);
+                }
+
+                if (book) {
+                    displayBook(book);
+                    showToast(`Buku dijumpai: ${book.title}`, 'success', 'check-circle');
+                } else {
+                    // Check if it looks like a barcode (numbers only, length >= 10)
+                    if (/^\d{10,}$/.test(searchTerm)) {
+                        showNewBookForm(searchTerm);
+                        showToast('Barcode tidak dijumpai. Sila tambah buku baru.', 'info', 'plus-circle');
+                    } else {
+                        // It's a title search - show smart new book form
+                        showSmartNewBookForm(searchTerm);
+                        showToast(`Tajuk "${searchTerm}" tidak dijumpai. Buat entri baru?`, 'info', 'lightbulb');
+                    }
+                }
+            } catch (error) {
+                showToast('Ralat semasa mencari buku', 'error', 'exclamation-circle');
+                showEmptyState();
+            }
+        }
+
+        // Real-time search as user types
+        function handleSearchInput() {
+            clearTimeout(searchTimeout);
+            const searchTerm = document.getElementById('searchInput').value.trim();
+            
+            if (searchTerm.length < 2) {
+                hideSuggestions();
+                return;
+            }
+
+            // Don't auto-search if it looks like a barcode being typed
+            if (/^\d+$/.test(searchTerm) && searchTerm.length < 10) {
+                return;
+            }
+
+            searchTimeout = setTimeout(async () => {
+                if (!isSearching) {
+                    await performLiveSearch(searchTerm);
+                }
+            }, 500); // Wait 500ms after user stops typing
+        }
+
+        async function performLiveSearch(searchTerm) {
+            if (searchTerm.length < 2) return;
+            
+            isSearching = true;
+            
+            try {
+                // Search for similar titles
+                const suggestions = await getSuggestions(searchTerm);
+                
+                if (suggestions.length > 0) {
+                    showSuggestions(suggestions);
+                } else {
+                    // No matches found - show quick add option
+                    if (!/^\d+$/.test(searchTerm)) { // Not a barcode
+                        showQuickAddSuggestion(searchTerm);
+                    }
+                }
+            } catch (error) {
+                console.log('Search error:', error);
+            } finally {
+                isSearching = false;
+            }
+        }
+
+        // Get book suggestions based on partial title match
+        async function getSuggestions(searchTerm) {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    const suggestions = mockBooks.filter(book => 
+                        book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        book.category.toLowerCase().includes(searchTerm.toLowerCase())
+                    ).slice(0, 5); // Limit to 5 suggestions
+                    resolve(suggestions);
+                }, 200);
+            });
+        }
+
+        // Display all books
+        async function showAllBooks() {
+            showLoading();
+            
+            try {
+                const books = await getAllBooks();
+                displayAllBooks(books);
+                showToast(`Menunjukkan ${books.length} buku dalam sistem`, 'info', 'list');
+            } catch (error) {
+                showToast('Ralat semasa memuatkan senarai buku', 'error', 'exclamation-circle');
+                showEmptyState();
+            }
+        }
+
+        // Display all books in a grid
+        function displayAllBooks(books) {
+            const bookDisplay = document.getElementById('bookDisplay');
+            
+            let booksHTML = '<div class="row g-4 p-4">';
+            
+            books.forEach(book => {
+                const stockColor = book.stock > 10 ? 'success' : book.stock > 5 ? 'warning' : 'danger';
+                const stockIcon = book.stock > 10 ? 'check-circle' : book.stock > 5 ? 'exclamation-triangle' : 'times-circle';
+                
+                booksHTML += `
+                    <div class="col-md-6 col-lg-4">
+                        <div class="stats-card h-100">
+                            <div class="stats-icon bg-primary">
+                                <i class="fas fa-book"></i>
+                            </div>
+                            <h6 class="fw-bold text-truncate" title="${book.title}">${book.title}</h6>
+                            <p class="text-muted small mb-2">
+                                <i class="fas fa-barcode me-1"></i>${book.barcode}
+                            </p>
+                            <p class="text-muted small mb-2">
+                                <i class="fas fa-map-marker-alt me-1"></i>${book.shelf}
+                            </p>
+                            <div class="text-${stockColor} fw-bold">
+                                <i class="fas fa-${stockIcon} me-1"></i>${book.stock} unit
+                            </div>
+                            <button onclick="selectBook('${book.barcode}')" class="btn btn-outline-primary btn-sm mt-2">
+                                <i class="fas fa-edit me-1"></i>Urus Stok
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            booksHTML += '</div>';
+            bookDisplay.innerHTML = booksHTML;
+            document.getElementById('newBookForm').classList.add('d-none');
+        }
+
+        // Select book from list
+        async function selectBook(barcode) {
+            const book = await getBookByBarcode(barcode);
+            if (book) {
+                displayBook(book, true);
+                document.getElementById('searchInput').value = book.title;
+            }
+        }
+
+        // Display single book card
+        function displayBook(book, highlight = false) {
+            currentBook = book;
+            const bookDisplay = document.getElementById('bookDisplay');
+            
+            const stockColor = book.stock > 10 ? 'success' : book.stock > 5 ? 'warning' : 'danger';
+            const stockIcon = book.stock > 10 ? 'check-circle' : book.stock > 5 ? 'exclamation-triangle' : 'times-circle';
+            
+            bookDisplay.innerHTML = `
+                <div class="book-card ${highlight ? 'highlight' : ''}" id="bookCard">
+                    <div class="book-title">
+                        <i class="fas fa-book text-primary"></i>
+                        ${book.title}
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="book-barcode">
+                                <i class="fas fa-barcode me-2"></i>${book.barcode}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="book-shelf">
+                                <i class="fas fa-map-marker-alt me-2"></i>${book.shelf || 'Tidak ditetapkan'}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="book-stock mb-3">
+                        <i class="fas fa-${stockIcon} me-2"></i>Baki Stok: <span id="currentStock">${book.stock}</span> unit
+                    </div>
+                    
+                    <div class="stock-controls">
+                        <div class="row align-items-center">
+                            <div class="col-md-4 mb-2">
+                                <label class="form-label small fw-bold">Kuantiti:</label>
+                                <input type="number" id="quantityInput" class="form-control quantity-input" value="1" min="1">
+                            </div>
+                            <div class="col-md-8 mb-2">
+                                <div class="d-flex gap-2">
+                                    <button onclick="updateBookStock('add')" class="btn btn-success btn-custom flex-fill">
+                                        <i class="fas fa-plus me-2"></i>Tambah Stok
+                                    </button>
+                                    <button onclick="updateBookStock('subtract')" class="btn btn-danger btn-custom flex-fill">
+                                        <i class="fas fa-minus me-2"></i>Tolak Stok
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            if (highlight) {
+                setTimeout(() => {
+                    document.getElementById('bookCard').scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'center' 
+                    });
+                }, 100);
+            }
+
+            document.getElementById('newBookForm').classList.add('d-none');
+        }
+
+        // Update stock functionality
+        async function updateBookStock(action) {
+            if (!currentBook) return;
+
+            const quantityInput = document.getElementById('quantityInput');
+            const quantity = parseInt(quantityInput.value) || 1;
+            const currentStockElement = document.getElementById('currentStock');
+            let currentStock = parseInt(currentStockElement.textContent);
+            let newStock;
+
+            if (action === 'add') {
+                newStock = currentStock + quantity;
+            } else {
+                newStock = Math.max(0, currentStock - quantity);
+            }
+
+            try {
+                const success = await updateStock(currentBook.barcode, newStock);
+                if (success) {
+                    currentStockElement.textContent = newStock;
+                    currentBook.stock = newStock;
+                    
+                    const actionText = action === 'add' ? 'ditambah' : 'ditolak';
+                    const actionIcon = action === 'add' ? 'plus-circle' : 'minus-circle';
+                    showToast(`Stok ${actionText} ${quantity} unit. Baki: ${newStock}`, 'success', actionIcon);
+                    
+                    quantityInput.value = '1';
+                    
+                    // Update stock color
+                    const stockColor = newStock > 10 ? 'success' : newStock > 5 ? 'warning' : 'danger';
+                    const stockIcon = newStock > 10 ? 'check-circle' : newStock > 5 ? 'exclamation-triangle' : 'times-circle';
+                    currentStockElement.parentElement.className = `book-stock mb-3 text-${stockColor}`;
+                    currentStockElement.parentElement.innerHTML = `<i class="fas fa-${stockIcon} me-2"></i>Baki Stok: <span id="currentStock">${newStock}</span> unit`;
+                } else {
+                    showToast('Ralat semasa mengemaskini stok', 'error', 'exclamation-circle');
+                }
+            } catch (error) {
+                showToast('Ralat semasa mengemaskini stok', 'error', 'exclamation-circle');
+            }
+        }
+
+        // Scanner functionality
+        function toggleScanner() {
+            const scannerSection = document.getElementById('scannerSection');
+            const scannerBtn = document.getElementById('scannerBtn');
+            
+            if (scannerSection.classList.contains('d-none')) {
+                startScanner();
+                scannerSection.classList.remove('d-none');
+                scannerBtn.innerHTML = '<i class="fas fa-camera me-2"></i>Scanner Aktif';
+                scannerBtn.classList.remove('btn-secondary');
+                scannerBtn.classList.add('btn-success');
+            } else {
+                stopScanner();
+            }
+        }
+
+        function startScanner() {
+            html5QrcodeScanner = new Html5QrcodeScanner(
+                "qr-reader",
+                { 
+                    fps: 10, 
+                    qrbox: { width: 250, height: 250 },
+                    aspectRatio: 1.0
+                },
+                false
+            );
+            
+            html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+        }
+
+        function stopScanner() {
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.clear();
+                html5QrcodeScanner = null;
+            }
+            
+            const scannerSection = document.getElementById('scannerSection');
+            const scannerBtn = document.getElementById('scannerBtn');
+            
+            scannerSection.classList.add('d-none');
+            scannerBtn.innerHTML = '<i class="fas fa-camera me-2"></i>Imbas Barcode';
+            scannerBtn.classList.remove('btn-success');
+            scannerBtn.classList.add('btn-secondary');
+        }
+
+        async function onScanSuccess(decodedText, decodedResult) {
+            stopScanner();
+            document.getElementById('searchInput').value = decodedText;
+            
+            try {
+                const book = await getBookByBarcode(decodedText);
+                if (book) {
+                    displayBook(book, true);
+                    showToast(`Barcode diimbas: ${book.title}`, 'success', 'qrcode');
+                } else {
+                    showAutoCreateBookForm(decodedText);
+                    showToast('Barcode baru diimbas! Sila lengkapkan maklumat buku.', 'info', 'plus-circle');
+                }
+            } catch (error) {
+                showToast('Ralat semasa memproses barcode', 'error', 'exclamation-circle');
+            }
+        }
+
+        function onScanFailure(error) {
+            // Handle scan failure silently
+        }
+
+        // Suggestions functionality
+        function showSuggestions(suggestions) {
+            const suggestionsDiv = document.getElementById('suggestions');
+            let suggestionsHTML = '';
+            
+            suggestions.forEach(book => {
+                const stockColor = book.stock > 10 ? 'success' : book.stock > 5 ? 'warning' : 'danger';
+                const stockIcon = book.stock > 10 ? 'check-circle' : book.stock > 5 ? 'exclamation-triangle' : 'times-circle';
+                
+                suggestionsHTML += `
+                    <div class="suggestion-item" onclick="selectSuggestion('${book.barcode}')">
+                        <i class="fas fa-book text-primary"></i>
+                        <div class="flex-grow-1">
+                            <div class="suggestion-title">${book.title}</div>
+                            <div class="suggestion-details">
+                                <i class="fas fa-map-marker-alt me-1"></i>${book.shelf} • 
+                                <i class="fas fa-${stockIcon} text-${stockColor} me-1"></i>${book.stock} unit
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            suggestionsDiv.innerHTML = suggestionsHTML;
+            suggestionsDiv.classList.remove('d-none');
+        }
+
+        function showQuickAddSuggestion(searchTerm) {
+            const suggestionsDiv = document.getElementById('suggestions');
+            
+            suggestionsDiv.innerHTML = `
+                <div class="suggestion-item quick-add-suggestion" onclick="createNewBookFromTitle('${searchTerm}')">
+                    <i class="fas fa-plus-circle"></i>
+                    <div class="flex-grow-1">
+                        <div class="suggestion-title">Tambah "${searchTerm}" sebagai buku baru</div>
+                        <div class="suggestion-details">Klik untuk buat entri baru dengan tajuk ini</div>
+                    </div>
+                </div>
+            `;
+            
+            suggestionsDiv.classList.remove('d-none');
+        }
+
+        function hideSuggestions() {
+            document.getElementById('suggestions').classList.add('d-none');
+        }
+
+        async function selectSuggestion(barcode) {
+            hideSuggestions();
+            const book = await getBookByBarcode(barcode);
+            if (book) {
+                displayBook(book, true);
+                document.getElementById('searchInput').value = book.title;
+                showToast(`Buku dipilih: ${book.title}`, 'success', 'check-circle');
+            }
+        }
+
+        function createNewBookFromTitle(title) {
+            hideSuggestions();
+            showSmartNewBookForm(title);
+        }
+
+        // Smart new book form with pre-filled title
+        function showSmartNewBookForm(title) {
+            // Generate a temporary barcode for new books
+            const tempBarcode = 'NEW' + Date.now();
+            
+            document.getElementById('newBarcode').value = tempBarcode;
+            document.getElementById('newTitle').value = title;
+            document.getElementById('newShelf').value = '';
+            document.getElementById('newStock').value = '1';
+            document.getElementById('newBookForm').classList.remove('d-none');
+            
+            // Show smart suggestions for shelf based on title
+            suggestShelfLocation(title);
+            
+            document.getElementById('bookDisplay').innerHTML = `
+                <div class="book-card highlight">
+                    <div class="book-title">
+                        <i class="fas fa-lightbulb text-warning"></i>
+                        Buku Baru: ${title}
+                    </div>
+                    <div class="book-barcode">
+                        <i class="fas fa-barcode me-2"></i>Barcode akan dijana automatik
+                    </div>
+                    <div class="alert alert-info" role="alert">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Sistem telah mengisi tajuk buku. Sila lengkapkan maklumat rak dan stok.
+                    </div>
+                </div>
+            `;
+            
+            setTimeout(() => {
+                document.getElementById('newShelf').focus();
+            }, 200);
+        }
+
+        // Suggest shelf location based on book title
+        function suggestShelfLocation(title) {
+            const shelfInput = document.getElementById('newShelf');
+            const titleLower = title.toLowerCase();
+            
+            let suggestedShelf = '';
+            
+            if (titleLower.includes('matematik') || titleLower.includes('math')) {
+                suggestedShelf = 'B2-Matematik';
+            } else if (titleLower.includes('sejarah') || titleLower.includes('history')) {
+                suggestedShelf = 'A1-Sejarah';
+            } else if (titleLower.includes('bahasa') || titleLower.includes('language')) {
+                suggestedShelf = 'C1-Bahasa';
+            } else if (titleLower.includes('sains') || titleLower.includes('science') || titleLower.includes('fizik') || titleLower.includes('kimia') || titleLower.includes('biologi')) {
+                suggestedShelf = 'E1-Sains';
+            } else if (titleLower.includes('komputer') || titleLower.includes('computer') || titleLower.includes('ict')) {
+                suggestedShelf = 'D3-Komputer';
+            } else if (titleLower.includes('tingkatan 1')) {
+                suggestedShelf = 'F1-Tingkatan1';
+            } else if (titleLower.includes('tingkatan 2')) {
+                suggestedShelf = 'F2-Tingkatan2';
+            } else if (titleLower.includes('tingkatan 3')) {
+                suggestedShelf = 'F3-Tingkatan3';
+            } else if (titleLower.includes('tingkatan 4')) {
+                suggestedShelf = 'F4-Tingkatan4';
+            } else if (titleLower.includes('tingkatan 5')) {
+                suggestedShelf = 'F5-Tingkatan5';
+            } else {
+                suggestedShelf = 'G1-Umum';
+            }
+            
+            shelfInput.value = suggestedShelf;
+            shelfInput.placeholder = `Cadangan: ${suggestedShelf}`;
+        }
+
+        // New book form functionality
+        function showNewBookForm(barcode) {
+            document.getElementById('newBarcode').value = barcode;
+            document.getElementById('newTitle').value = '';
+            document.getElementById('newShelf').value = '';
+            document.getElementById('newStock').value = '0';
+            document.getElementById('newBookForm').classList.remove('d-none');
+            document.getElementById('bookDisplay').innerHTML = '';
+            
+            setTimeout(() => {
+                document.getElementById('newTitle').focus();
+            }, 100);
+        }
+
+        function showAutoCreateBookForm(barcode) {
+            document.getElementById('newBarcode').value = barcode;
+            document.getElementById('newTitle').value = '';
+            document.getElementById('newShelf').value = '';
+            document.getElementById('newStock').value = '1';
+            document.getElementById('newBookForm').classList.remove('d-none');
+            
+            document.getElementById('bookDisplay').innerHTML = `
+                <div class="book-card highlight">
+                    <div class="book-title">
+                        <i class="fas fa-mobile-alt text-warning"></i>
+                        Barcode Baru Diimbas
+                    </div>
+                    <div class="book-barcode">
+                        <i class="fas fa-barcode me-2"></i>${barcode}
+                    </div>
+                    <div class="alert alert-warning" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Buku ini belum wujud dalam sistem. Sila lengkapkan maklumat di bawah.
+                    </div>
+                </div>
+            `;
+            
+            setTimeout(() => {
+                document.getElementById('newTitle').focus();
+                document.getElementById('newTitle').placeholder = "Contoh: Matematik Tingkatan 5";
+            }, 200);
+        }
+
+        async function saveNewBook() {
+            let barcode = document.getElementById('newBarcode').value;
+            const title = document.getElementById('newTitle').value.trim();
+            const shelf = document.getElementById('newShelf').value.trim();
+            const stock = document.getElementById('newStock').value;
+
+            if (!title) {
+                showToast('Sila masukkan tajuk buku', 'warning', 'exclamation-triangle');
+                document.getElementById('newTitle').focus();
+                return;
+            }
+
+            if (!shelf) {
+                showToast('Sila masukkan nama rak', 'warning', 'exclamation-triangle');
+                document.getElementById('newShelf').focus();
+                return;
+            }
+
+            // Generate real barcode if it's a temporary one
+            if (barcode.startsWith('NEW')) {
+                barcode = generateBarcode();
+                document.getElementById('newBarcode').value = barcode;
+            }
+
+            const saveBtn = document.querySelector('#newBookForm .btn-success');
+            const originalText = saveBtn.innerHTML;
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Menyimpan...';
+            saveBtn.disabled = true;
+
+            try {
+                const success = await addNewBook(barcode, title, shelf, parseInt(stock));
+                if (success) {
+                    const newBook = { barcode, title, shelf, stock: parseInt(stock) };
+                    displayBook(newBook, true);
+                    showToast(`Buku baru berjaya ditambah: ${title}`, 'success', 'check-circle');
+                    document.getElementById('searchInput').value = '';
+                } else {
+                    showToast('Ralat semasa menambah buku baru', 'error', 'exclamation-circle');
+                }
+            } catch (error) {
+                showToast('Ralat semasa menambah buku baru', 'error', 'exclamation-circle');
+            } finally {
+                saveBtn.innerHTML = originalText;
+                saveBtn.disabled = false;
+            }
+        }
+
+        // Generate a realistic barcode
+        function generateBarcode() {
+            const prefix = '978967'; // Malaysian ISBN prefix
+            const randomPart = Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
+            return prefix + randomPart;
+        }
+
+        function cancelNewBook() {
+            document.getElementById('newBookForm').classList.add('d-none');
+            showEmptyState();
+        }
+
+        // Utility functions
+        function showLoading() {
+            document.getElementById('bookDisplay').innerHTML = `
+                <div class="loading-state">
+                    <div class="loading-spinner"></div>
+                    <h4><i class="fas fa-search me-2"></i>Mencari...</h4>
+                    <p class="text-muted">Sila tunggu sebentar</p>
+                </div>
+            `;
+        }
+
+        function showEmptyState() {
+            document.getElementById('bookDisplay').innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-book-reader"></i>
+                    <h3 class="mb-3">Cari Buku Anda</h3>
+                    <p class="text-muted">Gunakan kotak carian di atas atau imbas barcode untuk mula menguruskan stok buku</p>
+                </div>
+            `;
+        }
+
+        // Event listeners
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                hideSuggestions();
+                searchBook();
+            }
+        });
+
+        // Add input event listener for real-time search
+        document.getElementById('searchInput').addEventListener('input', handleSearchInput);
+
+        // Hide suggestions when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.search-input-group')) {
+                hideSuggestions();
+            }
+        });
+
+        // Handle keyboard navigation in suggestions
+        document.getElementById('searchInput').addEventListener('keydown', function(e) {
+            const suggestions = document.getElementById('suggestions');
+            if (suggestions.classList.contains('d-none')) return;
+            
+            const items = suggestions.querySelectorAll('.suggestion-item');
+            if (items.length === 0) return;
+            
+            let currentIndex = -1;
+            items.forEach((item, index) => {
+                if (item.classList.contains('active')) {
+                    currentIndex = index;
+                }
+            });
+            
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                currentIndex = (currentIndex + 1) % items.length;
+                updateActiveSuggestion(items, currentIndex);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                currentIndex = currentIndex <= 0 ? items.length - 1 : currentIndex - 1;
+                updateActiveSuggestion(items, currentIndex);
+            } else if (e.key === 'Enter' && currentIndex >= 0) {
+                e.preventDefault();
+                items[currentIndex].click();
+            } else if (e.key === 'Escape') {
+                hideSuggestions();
+            }
+        });
+
+        function updateActiveSuggestion(items, activeIndex) {
+            items.forEach((item, index) => {
+                if (index === activeIndex) {
+                    item.classList.add('active');
+                    item.style.background = 'var(--secondary-color)';
+                    item.style.color = 'white';
+                } else {
+                    item.classList.remove('active');
+                    item.style.background = '';
+                    item.style.color = '';
+                }
+            });
+        }
+
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const newBookForm = document.getElementById('newBookForm');
+                if (!newBookForm.classList.contains('d-none')) {
+                    if (e.target.id === 'newTitle' || e.target.id === 'newShelf' || e.target.id === 'newStock') {
+                        saveNewBook();
+                    }
+                }
+            }
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            showToast('Sistem pengurusan stok buku siap digunakan!', 'success', 'check-circle');
+        });
+    </script>
+</body>
+</html>
